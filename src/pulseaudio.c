@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdio.h>
 
+static int preferredSampleRate = 0;
 
 static void subscribe_callback(pa_context *context,
         pa_subscription_event_type_t event_bits, uint32_t index, void *userdata)
@@ -352,6 +353,7 @@ static void server_info_callback(pa_context *pulse_context, const pa_server_info
     struct SoundIoPrivate *si = (struct SoundIoPrivate *)userdata;
     assert(si);
     struct SoundIoPulseAudio *sipa = &si->backend_data.pulseaudio;
+    pa_sample_spec ss;
 
     assert(!sipa->default_sink_name);
     assert(!sipa->default_source_name);
@@ -361,6 +363,10 @@ static void server_info_callback(pa_context *pulse_context, const pa_server_info
 
     if (!sipa->default_sink_name || !sipa->default_source_name)
         sipa->device_query_err = SoundIoErrorNoMem;
+
+    ss = info->sample_spec;
+
+    preferredSampleRate = ss.rate;
 
     pa_threaded_mainloop_signal(sipa->main_loop, 0);
 }
@@ -678,6 +684,7 @@ static int outstream_open_pa(struct SoundIoPrivate *si, struct SoundIoOutStreamP
 
     pa_sample_spec sample_spec;
     sample_spec.format = to_pulseaudio_format(outstream->format);
+    outstream->sample_rate = preferredSampleRate;
     sample_spec.rate = outstream->sample_rate;
 
     sample_spec.channels = outstream->layout.channel_count;
@@ -903,6 +910,7 @@ static int instream_open_pa(struct SoundIoPrivate *si, struct SoundIoInStreamPri
 
     pa_sample_spec sample_spec;
     sample_spec.format = to_pulseaudio_format(instream->format);
+    instream->sample_rate = preferredSampleRate;
     sample_spec.rate = instream->sample_rate;
     sample_spec.channels = instream->layout.channel_count;
 
