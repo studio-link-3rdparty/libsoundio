@@ -294,6 +294,9 @@ static void source_info_callback(pa_context *pulse_context, const pa_source_info
     if (sipa->device_query_err)
         return;
 
+    if (info->monitor_of_sink != PA_INVALID_INDEX)
+	return;
+
     struct SoundIoDevicePrivate *dev = ALLOCATE(struct SoundIoDevicePrivate, 1);
     if (!dev) {
         sipa->device_query_err = SoundIoErrorNoMem;
