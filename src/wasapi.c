@@ -297,7 +297,15 @@ static void from_channel_mask_layout(UINT channel_mask, struct SoundIoChannelLay
 static void from_wave_format_layout(WAVEFORMATEXTENSIBLE *wave_format, struct SoundIoChannelLayout *layout) {
     assert(wave_format->Format.wFormatTag == WAVE_FORMAT_EXTENSIBLE);
     layout->channel_count = 0;
-    from_channel_mask_layout(wave_format->dwChannelMask, layout);
+    if (!wave_format->dwChannelMask) {
+	    layout->channel_count = wave_format->Format.nChannels;
+	    const struct SoundIoChannelLayout *builtin_layout;
+	    builtin_layout = soundio_channel_layout_get_default(layout->channel_count);
+	    if (builtin_layout)
+	    layout->name = builtin_layout->name;
+    } else {
+	    from_channel_mask_layout(wave_format->dwChannelMask, layout);
+    }
 }
 
 static enum SoundIoFormat from_wave_format_format(WAVEFORMATEXTENSIBLE *wave_format) {
@@ -392,7 +400,7 @@ static void to_wave_format_layout(const struct SoundIoChannelLayout *layout, WAV
                 wave_format->dwChannelMask |= SPEAKER_TOP_BACK_RIGHT;
                 break;
             default:
-                soundio_panic("to_wave_format_layout: unsupported channel id");
+    		wave_format->dwChannelMask = 0;
         }
     }
 }
