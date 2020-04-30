@@ -14,7 +14,7 @@
 static const int OUTPUT_ELEMENT = 0;
 static const int INPUT_ELEMENT = 1;
 
-static char *os_error_msg[50] = {0};
+static char os_error_msg[50] = {0};
 
 
 static void CheckOSError(OSStatus error, const char *operation)
