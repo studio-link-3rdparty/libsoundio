@@ -653,7 +653,7 @@ struct SoundIoInStream {
     /// If you do not supply `error_callback`, the default callback will print
     /// a message to stderr and then abort().
     /// This is called from the SoundIoInStream::read_callback thread context.
-    void (*error_callback)(struct SoundIoInStream *, int err);
+    void (*error_callback)(struct SoundIoInStream *, int err, const char *msg);
 
     /// Optional: Name of the stream. Defaults to "SoundIoInStream";
     /// PulseAudio uses this for the stream name.

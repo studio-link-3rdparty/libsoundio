@@ -9,9 +9,31 @@
 #include "soundio_private.h"
 
 #include <assert.h>
+#include <ctype.h>
 
 static const int OUTPUT_ELEMENT = 0;
 static const int INPUT_ELEMENT = 1;
+
+static char *os_error_msg[50] = {0};
+
+
+static void CheckOSError(OSStatus error, const char *operation)
+{
+	if (error == noErr) return;
+
+	char str[20];
+	// see if it appears to be a 4-char-code
+	*(UInt32 *)(str + 1) = CFSwapInt32HostToBig(error);
+	if (isprint(str[1]) && isprint(str[2]) && isprint(str[3]) && isprint(str[4])) {
+		str[0] = str[5] = '\'';
+		str[6] = '\0';
+	} else
+		// no, format it as an integer
+		sprintf(str, "%d", (int)error);
+
+	snprintf(os_error_msg, sizeof(os_error_msg), "%s: %s", str, operation);
+}
+
 
 static AudioObjectPropertyAddress device_listen_props[] = {
     {
@@ -1181,7 +1203,8 @@ static OSStatus read_callback_ca(void *userdata, AudioUnitRenderActionFlags *io_
     if ((os_err = AudioUnitRender(isca->instance, io_action_flags, in_time_stamp,
         in_bus_number, in_number_frames, isca->buffer_list)))
     {
-        instream->error_callback(instream, SoundIoErrorStreaming);
+	CheckOSError(os_err, "AudioUnitRender");
+        instream->error_callback(instream, SoundIoErrorStreaming, os_error_msg);
         return noErr;
     }
 

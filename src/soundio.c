@@ -568,8 +568,8 @@ int soundio_outstream_set_volume(struct SoundIoOutStream *outstream, double volu
     return si->outstream_set_volume(si, os, volume);
 }
 
-static void default_instream_error_callback(struct SoundIoInStream *is, int err) {
-    soundio_panic("libsoundio: %s", soundio_strerror(err));
+static void default_instream_error_callback(struct SoundIoInStream *is, int err, const char *msg) {
+    soundio_panic("libsoundio: %s %s", soundio_strerror(err), msg);
 }
 
 static void default_overflow_callback(struct SoundIoInStream *instream) { }
