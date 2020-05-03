@@ -1320,8 +1320,11 @@ static int instream_open_ca(struct SoundIoPrivate *si, struct SoundIoInStreamPri
     if ((os_err = AudioObjectAddPropertyListener(dca->device_id, &prop_address,
         on_instream_device_overload, is)))
     {
-        instream_destroy_ca(si, is);
-        return SoundIoErrorOpeningDevice;
+	// Ignore "nope" (means listener already active)
+	if (os_err != kAudioHardwareIllegalOperationError) {
+		instream_destroy_ca(si, is);
+		return SoundIoErrorOpeningDevice;
+	}
     }
 
     isca->hardware_latency = dca->latency_frames / (double)instream->sample_rate;
