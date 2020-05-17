@@ -1157,6 +1157,7 @@ static OSStatus read_callback_ca(void *userdata, AudioUnitRenderActionFlags *io_
         in_bus_number, in_number_frames, isca->buffer_list)))
     {
 	CheckOSError(os_err, "AudioUnitRender");
+
         instream->error_callback(instream, SoundIoErrorStreaming, os_error_msg);
         return noErr;
     }
@@ -1202,32 +1203,16 @@ static int instream_open_ca(struct SoundIoPrivate *si, struct SoundIoInStreamPri
             instream->software_latency,
             device->software_latency_max);
 
-
     AudioObjectPropertyAddress prop_address;
-    prop_address.mSelector = kAudioDevicePropertyStreamConfiguration;
-    prop_address.mScope = kAudioObjectPropertyScopeInput;
-    prop_address.mElement = kAudioObjectPropertyElementMaster;
-    io_size = 0;
-    if ((os_err = AudioObjectGetPropertyDataSize(dca->device_id, &prop_address,
-        0, NULL, &io_size)))
-    {
-        instream_destroy_ca(si, is);
-        return SoundIoErrorOpeningDevice;
-    }
+
+    io_size = offsetof(AudioBufferList, mBuffers[0]) + sizeof(AudioBuffer);
 
     isca->buffer_list = (AudioBufferList*)ALLOCATE_NONZERO(char, io_size);
     if (!isca->buffer_list) {
         instream_destroy_ca(si, is);
         return SoundIoErrorNoMem;
     }
-
-    if ((os_err = AudioObjectGetPropertyData(dca->device_id, &prop_address,
-        0, NULL, &io_size, isca->buffer_list)))
-    {
-        instream_destroy_ca(si, is);
-        return SoundIoErrorOpeningDevice;
-    }
-
+    isca->buffer_list->mNumberBuffers = 1;
 
     AudioComponentDescription desc = {0};
     desc.componentType = kAudioUnitType_Output;
